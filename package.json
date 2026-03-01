@@ -10,9 +10,9 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@types/matter-js": "^0.20.2",
-    "matter-js": "^0.20.0",
-    "pixi.js": "^8.8.1"
+    "@dimforge/rapier2d": "^0.19.3",
+    "pixi.js": "^8.8.1",
+    "vite-plugin-wasm": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

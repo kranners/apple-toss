@@ -1,4 +1,3 @@
-import Matter from "matter-js";
 import { Application, Assets, Sprite } from "pixi.js";
 
 (async () => {
@@ -12,58 +11,8 @@ import { Application, Assets, Sprite } from "pixi.js";
   const pixiContainer = document.getElementById("pixi-container")!;
   pixiContainer.appendChild(app.canvas);
 
-  const engine = Matter.Engine.create();
-
-  const wallTop = Matter.Bodies.rectangle(
-    app.screen.width / 2,
-    0,
-    app.screen.width,
-    10,
-    {
-      isStatic: true,
-    },
-  );
-
-  const wallBottom = Matter.Bodies.rectangle(
-    app.screen.width / 2,
-    app.screen.height,
-    app.screen.width,
-    10,
-    {
-      isStatic: true,
-    },
-  );
-
-  const wallRight = Matter.Bodies.rectangle(
-    app.screen.width,
-    app.screen.height / 2,
-    10,
-    app.screen.height,
-    {
-      isStatic: true,
-    },
-  );
-
-  const wallLeft = Matter.Bodies.rectangle(
-    0,
-    app.screen.height / 2,
-    10,
-    app.screen.height,
-    {
-      isStatic: true,
-    },
-  );
-
-  Matter.World.add(engine.world, [wallTop, wallBottom, wallRight, wallLeft]);
-
-  const mouseConstraint = Matter.MouseConstraint.create(engine, {
-    mouse: Matter.Mouse.create(app.canvas),
-    constraint: {
-      render: { visible: true },
-    },
-  });
-
-  Matter.World.add(engine.world, mouseConstraint);
+  const RAPIER = await import("@dimforge/rapier2d");
+  const world = new RAPIER.World({ x: 0.0, y: 9.81 });
 
   // Load the bunny texture
   const bunnyTexture = await Assets.load("/assets/bunny.png");
@@ -75,21 +24,25 @@ import { Application, Assets, Sprite } from "pixi.js";
 
   app.stage.addChild(bunnySprite);
 
-  const bunnyBody = Matter.Bodies.rectangle(
+  const bunnyRigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(
     bunnySprite.x,
     bunnySprite.y,
-    bunnySprite.width,
-    bunnySprite.height,
-    { restitution: 0.8 },
   );
 
-  Matter.World.addBody(engine.world, bunnyBody);
+  const bunnyRigidBody = world.createRigidBody(bunnyRigidBodyDesc);
+
+  const bunnyColliderDesc = RAPIER.ColliderDesc.cuboid(
+    bunnySprite.width / 2,
+    bunnySprite.height / 2,
+  );
+
+  world.createCollider(bunnyColliderDesc, bunnyRigidBody);
 
   // Listen for animate update
   app.ticker.add(() => {
-    bunnySprite.position = bunnyBody.position;
-    bunnySprite.rotation = bunnyBody.angle;
+    world.step();
+    // bunnyRigidBody.addForce({ x: 0.0, y: -0.5 }, true);
+    bunnySprite.position = bunnyRigidBody.translation();
+    bunnySprite.rotation = bunnyRigidBody.rotation();
   });
-
-  Matter.Runner.run(engine);
 })();
